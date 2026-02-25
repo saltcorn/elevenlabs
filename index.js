@@ -32,7 +32,7 @@ const configuration_workflow = () =>
 
 const functions = (config) => {
   return {
-    llm_transcribe: {
+    elevenlabs_transcribe: {
       run: async (opts) => {
         return await new ElevenLabsClient({
           apiKey: opts?.api_key || config.api_key,
