@@ -1,0 +1,37 @@
+{
+  "name": "@saltcorn/elevenlabs",
+  "version": "1.0.1",
+  "description": "ElevenLabs voice agents",
+  "main": "index.js",
+  "dependencies": {
+    "@saltcorn/data": "^0.9.0",
+    "@saltcorn/markup": "^0.9.0",
+    "@elevenlabs/elevenlabs-js": "2.31.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "scripts": {
+    "test": "jest tests --runInBand"
+  },
+  "author": "Tom Nielsen",
+  "license": "MIT",
+  "repository": "github:saltcorn/elevenlabs",
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "ecmaVersion": 2024
+    },
+    "env": {
+      "node": true,
+      "es6": true,
+      "jest/globals": true
+    },
+    "rules": {
+      "no-unused-vars": "off",
+      "no-case-declarations": "off",
+      "no-empty": "warn",
+      "no-fallthrough": "warn"
+    }
+  }
+}
