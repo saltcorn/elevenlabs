@@ -19,8 +19,6 @@ const ensure_final_slash = (s) => (s.endsWith("/") ? s : s + "/");
 const configuration_workflow = (modcfg) => (req) =>
   new Workflow({
     onDone: async (ctx, ...rest) => {
-      console.log("onDone args", ctx, ...rest);
-
       const client = new ElevenLabsClient({
         apiKey: modcfg.api_key,
       });
@@ -47,7 +45,7 @@ const configuration_workflow = (modcfg) => (req) =>
               description: tool.function.description,
 
               apiSchema: {
-                url: `${ensure_final_slash(baseurl)}view/${ctx.viewname}/toolcall`,
+                url: `${ensure_final_slash(baseurl)}view/${ctx.viewname}/toolcall?tool=${tool.function.name}`,
                 method: "POST",
                 pathParamsSchema: [],
                 queryParamsSchema: [],
@@ -91,6 +89,7 @@ const configuration_workflow = (modcfg) => (req) =>
           firstMessage: ctx.first_message,
           prompt: {
             prompt,
+            tool_ids
           },
         },
       };
@@ -208,6 +207,15 @@ const run =
 `;
   };
 
+const toolcall = async (table_id, viewname, config, body, { req, res }) => {
+  const action = await Trigger.findOne({ id: config.action_id });
+
+  const { tools } = await getState().functions.inspect_agent.run(
+    action,
+    req.user,
+  );
+};
+
 module.exports = (modcfg) => ({
   name: "ElevenLabs Agent Chat",
   configuration_workflow: configuration_workflow(modcfg),
@@ -216,6 +224,6 @@ module.exports = (modcfg) => ({
   //tableless: true,
   table_optional: true,
   run: run(modcfg),
-  //routes: { interact, delprevrun, debug_info, skillroute, execute_user_action },
+  routes: { toolcall },
   //mobile_render_server_side: true,
 });
