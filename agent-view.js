@@ -12,19 +12,78 @@ const { div, script, domReady, a, br, img } = require("@saltcorn/markup/tags");
 const { ElevenLabsClient } = require("@elevenlabs/elevenlabs-js");
 const { getState } = require("@saltcorn/data/db/state");
 
+const crypto = require("crypto");
+
+const ensure_final_slash = (s) => (s.endsWith("/") ? s : s + "/");
+
 const configuration_workflow = (modcfg) => (req) =>
   new Workflow({
-    onDone: async (ctx) => {
+    onDone: async (ctx, ...rest) => {
+      console.log("onDone args", ctx, ...rest);
+
       const client = new ElevenLabsClient({
         apiKey: modcfg.api_key,
       });
+      const action = await Trigger.findOne({ id: ctx.action_id });
+      const { systemPrompt, tools } =
+        await getState().functions.inspect_agent.run(action);
+      //console.log("tools", JSON.stringify(tools, null, 2));
+      if (!ctx.tool_id_hash) ctx.tool_id_hash = {};
+      const tool_ids = [];
+      const baseurl = getState().getConfig("base_url", "/");
+      for (const tool of tools) {
+        const hash = crypto
+          .createHash("md5")
+          .update(JSON.stringify(tool))
+          .digest("hex");
+        const hashed_name = `${tool.function.name}_${hash}`;
+        if (ctx.tool_id_hash[hashed_name])
+          tool_ids.push(ctx.tool_id_hash[hashed_name]);
+        else {
+          const { id } = await client.conversationalAi.tools.create({
+            toolConfig: {
+              type: "webhook",
+              name: tool.function.name,
+              description: tool.function.description,
+
+              apiSchema: {
+                url: `${ensure_final_slash(baseurl)}view/${ctx.viewname}/toolcall`,
+                method: "POST",
+                pathParamsSchema: [],
+                queryParamsSchema: [],
+                /*requestBodySchema: {
+                  id: "body",
+                  type: "object",
+                  description: "blah blah",
+                  properties: [
+                    {
+                      id: "bar",
+                      type: "string",
+                      value_type: "llm_prompt",
+                      description: "baz",
+                      dynamic_variable: "",
+                      constant_value: "",
+                      enum: null,
+                      is_system_provided: false,
+                      required: false,
+                    },
+                  ],
+                  required: false,
+                  value_type: "llm_prompt",
+                },*/
+                requestHeaders: [],
+              },
+            },
+          });
+          ctx.tool_id_hash[hashed_name] = id;
+          tool_ids.push(id);
+        }
+      }
+
       let prompt;
       if (ctx.dynamic_prompt) {
         prompt = "{{sysprompt}}";
       } else {
-        const action = await Trigger.findOne({ id: ctx.action_id });
-        const { systemPrompt } =
-          await getState().functions.inspect_agent.run(action);
         prompt = systemPrompt;
       }
       const conversationConfig = {
