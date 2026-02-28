@@ -62,8 +62,10 @@ const routes = (config) => {
   return [
     {
       url: "/elevenlabs/toolcall",
-      method: "get",
+      method: "post",
+      noCsrf: true,
       callback: async (req, res) => {
+        //console.log("11labs toolcall", req.query, req.body)
         const { viewname, toolname, secret, ...rest } = req.query;
         const view = View.findOne({ name: viewname });
         if (!view) {
@@ -77,7 +79,9 @@ const routes = (config) => {
           res.send("Action not found");
           return;
         }
-        if (!view.configuration.secret!==secret) {
+        //console.log("view cfg", view.configuration);
+        
+        if (view.configuration.secret!==secret) {
           res.send("Secret does not match");
           return;
         }

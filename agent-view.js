@@ -74,7 +74,7 @@ const configuration_workflow = (modcfg) => (req) =>
                   value_type: "llm_prompt",
                 },*/
                 requestHeaders: {
-                  /*"CSRF-Token": {
+                /*  "CSRF-Token": {
                     type: "dynamic_variable",
                     secretId: "",
                     variableName: "crsf",
