@@ -49,6 +49,7 @@ const configuration_workflow = (modcfg) => (req) =>
                 method: "POST",
                 //pathParamsSchema: {},
                 //queryParamsSchema: {},
+                requestBodySchema: {},
                 /*requestBodySchema: {
                   id: "body",
                   type: "object",
@@ -73,6 +74,7 @@ const configuration_workflow = (modcfg) => (req) =>
               },
             },
           });
+          //console.log("create tool", tool.function.name, hashed_name, id)
           ctx.tool_id_hash[hashed_name] = id;
           tool_ids.push(id);
         }
@@ -89,11 +91,13 @@ const configuration_workflow = (modcfg) => (req) =>
           firstMessage: ctx.first_message,
           prompt: {
             prompt,
-            tool_ids
+            toolIds: tool_ids
           },
         },
       };
-
+      //console.log("conversationConfig", JSON.stringify(conversationConfig, null,2))
+      //console.log("agent id", !ctx.elevenlabs_agent_id);
+      
       if (!ctx.elevenlabs_agent_id) {
         const createres = await client.conversationalAi.agents.create({
           conversationConfig,
@@ -103,6 +107,8 @@ const configuration_workflow = (modcfg) => (req) =>
         await client.conversationalAi.agents.update(ctx.elevenlabs_agent_id, {
           conversationConfig,
         });
+        //console.log("updateres", JSON.stringify(updateRes, null,2));
+        
       }
       return ctx;
     },
