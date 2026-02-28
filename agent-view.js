@@ -29,13 +29,13 @@ const configuration_workflow = (modcfg) => (req) =>
       if (!ctx.tool_id_hash) ctx.tool_id_hash = {};
       const tool_ids = [];
       const baseurl = getState().getConfig("base_url", "/");
-      for (const tool of tools||[]) {
+      for (const tool of tools || []) {
         const hash = crypto
           .createHash("md5")
           .update(JSON.stringify(tool))
           .digest("hex");
         const hashed_name = `${tool.function.name}_${hash}`;
-        if (ctx.tool_id_hash[hashed_name])
+        if (false && ctx.tool_id_hash[hashed_name])
           tool_ids.push(ctx.tool_id_hash[hashed_name]);
         else {
           const { id } = await client.conversationalAi.tools.create({
@@ -70,7 +70,13 @@ const configuration_workflow = (modcfg) => (req) =>
                   required: false,
                   value_type: "llm_prompt",
                 },*/
-                //requestHeaders: [],
+                requestHeaders: {
+                  "CSRF-Token": {
+                    type: "dynamic_variable",
+                    secretId: "",
+                    variableName: "crsf",
+                  },
+                },
               },
             },
           });
@@ -91,13 +97,13 @@ const configuration_workflow = (modcfg) => (req) =>
           firstMessage: ctx.first_message,
           prompt: {
             prompt,
-            toolIds: tool_ids
+            toolIds: tool_ids,
           },
         },
       };
       //console.log("conversationConfig", JSON.stringify(conversationConfig, null,2))
       //console.log("agent id", !ctx.elevenlabs_agent_id);
-      
+
       if (!ctx.elevenlabs_agent_id) {
         const createres = await client.conversationalAi.agents.create({
           conversationConfig,
@@ -108,7 +114,6 @@ const configuration_workflow = (modcfg) => (req) =>
           conversationConfig,
         });
         //console.log("updateres", JSON.stringify(updateRes, null,2));
-        
       }
       return ctx;
     },
@@ -188,7 +193,7 @@ const run =
   ) => {
     const action = agent_action || (await Trigger.findOne({ id: action_id }));
     if (!action) throw new Error(`Action not found: ${action_id}`);
-    let dynvs = "";
+    let dynvs = `dynamic-variables='{"csrf": "${req.csrfToken()}"}'`;
     if (dynamic_prompt) {
       let triggering_row;
       if (table_id) {
@@ -202,7 +207,7 @@ const run =
         req.user,
         triggering_row,
       );
-      dynvs = `dynamic-variables='{"sysprompt": ${JSON.stringify(systemPrompt).replaceAll("'", "\\'")}}'`;
+      dynvs = `dynamic-variables='{"csrf": "${req.csrfToken()}", "sysprompt": ${JSON.stringify(systemPrompt).replaceAll("'", "\\'")}}'`;
     }
     return `<elevenlabs-convai 
        agent-id="${elevenlabs_agent_id}"
