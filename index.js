@@ -2,6 +2,8 @@ const Workflow = require("@saltcorn/data/models/workflow");
 const Form = require("@saltcorn/data/models/form");
 const File = require("@saltcorn/data/models/file");
 const User = require("@saltcorn/data/models/user");
+const View = require("@saltcorn/data/models/view");
+const Trigger = require("@saltcorn/data/models/trigger");
 const FieldRepeat = require("@saltcorn/data/models/fieldrepeat");
 const Plugin = require("@saltcorn/data/models/plugin");
 const { domReady } = require("@saltcorn/markup/tags");
@@ -56,9 +58,39 @@ const functions = (config) => {
   };
 };
 
+const routes = (config) => {
+  return [
+    {
+      url: "/elevenlabs/toolcall",
+      method: "get",
+      callback: async (req, res) => {
+        const { viewname, toolname, secret, ...rest } = req.query;
+        const view = View.findOne({ name: viewname });
+        if (!view) {
+          res.send("View not found");
+          return;
+        }
+        const action = await Trigger.findOne({
+          id: view.configuration.action_id,
+        });
+        if (!action) {
+          res.send("Action not found");
+          return;
+        }
+        if (!view.configuration.secret!==secret) {
+          res.send("Secret does not match");
+          return;
+        }
+        res.send("Blueberry")
+      },
+    },
+  ];
+};
+
 module.exports = {
   sc_plugin_api_version: 1,
   configuration_workflow,
   functions,
-  viewtemplates: (config)=>[require("./agent-view")(config)],
+  routes,
+  viewtemplates: (config) => [require("./agent-view")(config)],
 };

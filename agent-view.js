@@ -27,6 +27,9 @@ const configuration_workflow = (modcfg) => (req) =>
         await getState().functions.inspect_agent.run(action);
       //console.log("tools", JSON.stringify(tools, null, 2));
       if (!ctx.tool_id_hash) ctx.tool_id_hash = {};
+      if (!ctx.secret)
+        ctx.secret = Math.floor(Math.random() * 16777215).toString(16);
+
       const tool_ids = [];
       const baseurl = getState().getConfig("base_url", "/");
       for (const tool of tools || []) {
@@ -45,7 +48,7 @@ const configuration_workflow = (modcfg) => (req) =>
               description: tool.function.description,
 
               apiSchema: {
-                url: `${ensure_final_slash(baseurl)}view/${ctx.viewname}/toolcall?tool=${tool.function.name}`,
+                url: `${ensure_final_slash(baseurl)}elevenlabs/toolcall?viewname=${ctx.viewname}&toolname=${tool.function.name}&secret=${ctx.secret}`,
                 method: "POST",
                 //pathParamsSchema: {},
                 //queryParamsSchema: {},
@@ -71,11 +74,11 @@ const configuration_workflow = (modcfg) => (req) =>
                   value_type: "llm_prompt",
                 },*/
                 requestHeaders: {
-                  "CSRF-Token": {
+                  /*"CSRF-Token": {
                     type: "dynamic_variable",
                     secretId: "",
                     variableName: "crsf",
-                  },
+                  },*/
                 },
               },
             },
@@ -218,15 +221,6 @@ const run =
 `;
   };
 
-const toolcall = async (table_id, viewname, config, body, { req, res }) => {
-  const action = await Trigger.findOne({ id: config.action_id });
-
-  const { tools } = await getState().functions.inspect_agent.run(
-    action,
-    req.user,
-  );
-};
-
 module.exports = (modcfg) => ({
   name: "ElevenLabs Agent Chat",
   configuration_workflow: configuration_workflow(modcfg),
@@ -234,7 +228,6 @@ module.exports = (modcfg) => ({
   get_state_fields,
   //tableless: true,
   table_optional: true,
-  run: run(modcfg),
-  routes: { toolcall },
+  run: run(modcfg),  
   //mobile_render_server_side: true,
 });
