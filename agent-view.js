@@ -52,29 +52,9 @@ const configuration_workflow = (modcfg) => (req) =>
                 method: "POST",
                 //pathParamsSchema: {},
                 //queryParamsSchema: {},
-                requestBodySchema: {},
-                /*requestBodySchema: {
-                  id: "body",
-                  type: "object",
-                  description: "blah blah",
-                  properties: [
-                    {
-                      id: "bar",
-                      type: "string",
-                      value_type: "llm_prompt",
-                      description: "baz",
-                      dynamic_variable: "",
-                      constant_value: "",
-                      enum: null,
-                      is_system_provided: false,
-                      required: false,
-                    },
-                  ],
-                  required: false,
-                  value_type: "llm_prompt",
-                },*/
+                requestBodySchema: tool.function.parameters || {},
                 requestHeaders: {
-                /*  "CSRF-Token": {
+                  /* "CSRF-Token": {
                     type: "dynamic_variable",
                     secretId: "",
                     variableName: "crsf",
@@ -83,7 +63,6 @@ const configuration_workflow = (modcfg) => (req) =>
               },
             },
           });
-          //console.log("create tool", tool.function.name, hashed_name, id)
           ctx.tool_id_hash[hashed_name] = id;
           tool_ids.push(id);
         }
@@ -228,6 +207,6 @@ module.exports = (modcfg) => ({
   get_state_fields,
   //tableless: true,
   table_optional: true,
-  run: run(modcfg),  
+  run: run(modcfg),
   //mobile_render_server_side: true,
 });
