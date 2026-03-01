@@ -1,6 +1,6 @@
 {
   "name": "@saltcorn/elevenlabs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "ElevenLabs voice agents",
   "main": "index.js",
   "dependencies": {
