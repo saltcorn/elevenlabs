@@ -81,21 +81,23 @@ const routes = (config) => {
           return;
         }
         //console.log("view cfg", view.configuration);
-        
-        if (view.configuration.secret!==secret) {
+
+        if (view.configuration.secret !== secret) {
           res.status(401).send("Secret does not match");
           return;
         }
         const { skill_tools } =
-          await getState().functions.inspect_agent.run(action);        
-        const skill_tool = skill_tools.find(st=>toolname === st.function.name)
+          await getState().functions.inspect_agent.run(action);
+        const skill_tool = skill_tools.find(
+          (st) => toolname === st.function.name,
+        );
         if (!skill_tool) {
           res.status(400).send("Tool not found");
           return;
         }
-        const row = {};
-        const resp = await skill_tool.process(row, {req});
-        if(typeof resp==="string") res.send(resp);
+        const row = req.body;
+        const resp = await skill_tool.process(row, { req });
+        if (typeof resp === "string") res.send(resp);
         else res.json(resp);
       },
     },
