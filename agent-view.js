@@ -38,7 +38,7 @@ const configuration_workflow = (modcfg) => (req) =>
           .update(JSON.stringify(tool))
           .digest("hex");
         const hashed_name = `${tool.function.name}_${hash}`;
-        if (false && ctx.tool_id_hash[hashed_name])
+        if (ctx.tool_id_hash[hashed_name])
           tool_ids.push(ctx.tool_id_hash[hashed_name]);
         else {
           const { id } = await client.conversationalAi.tools.create({
