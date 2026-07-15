@@ -10,7 +10,9 @@ const { domReady } = require("@saltcorn/markup/tags");
 const db = require("@saltcorn/data/db");
 const { ElevenLabsClient } = require("@elevenlabs/elevenlabs-js");
 const { getState } = require("@saltcorn/data/db/state");
-
+const  { createWriteStream } = require("fs");
+const  { pipeline } = require("stream/promises");
+const  { Readable } = require("stream");
 const configuration_workflow = () =>
   new Workflow({
     steps: [
@@ -73,6 +75,42 @@ const functions = (config) => {
           type: "JSON",
           tstype:
             "{file: string, api_key?: string, diarize?: boolean, model?: string, languageCode?: string}",
+          required: true,
+        },
+      ],
+    },
+    elevenlabs_text_to_speech: {
+      run: async (opts) => {
+        const filePath = File.get_new_path(opts.fileName, true);
+
+        const audio = await new ElevenLabsClient({
+          apiKey: opts?.api_key || config.api_key,
+        }).textToSpeech.convert(opts.voiceId, {
+          text: opts.text,
+          modelId: opts.model || "eleven_multilingual_v2", // good all-round quality model
+          languageCode: opts.languageCode || undefined, // Language of the audio file. If set to null, the model will detect the language automatically.
+          outputFormat: "mp3_44100_128", // 44.1 kHz, 128 kbps MP3
+        });
+
+        // The stream may be a web ReadableStream depending on the runtime;
+        // normalize it to a Node stream, then pipe it to the output file.
+        const nodeStream =
+          typeof audio.getReader === "function"
+            ? Readable.fromWeb(audio)
+            : audio;
+
+        await pipeline(nodeStream, createWriteStream(filePath));
+        const relPath = File.absPathToServePath(filePath);
+        return await File.findOne(relPath);
+      },
+      isAsync: true,
+      description: "Text-to-speech with 11labs",
+      arguments: [
+        {
+          name: "options",
+          type: "JSON",
+          tstype:
+            "{fileName: string, voiceId: string, text: string, api_key?: string, model?: string, languageCode?: string}",
           required: true,
         },
       ],
