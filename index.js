@@ -36,6 +36,21 @@ const configuration_workflow = () =>
 
 const functions = (config) => {
   return {
+    elevenlabs_get_client: {
+      run: async (opts) => {
+        return await new ElevenLabsClient({
+          apiKey: opts?.api_key || config.api_key,
+        });
+      },
+      isAsync: true,
+      description: "Get the elevenlabs client",
+      arguments: [
+        {
+          name: "api_key",
+          type: "String",
+        },
+      ],
+    },
     elevenlabs_transcribe: {
       run: async (opts) => {
         return await new ElevenLabsClient({
@@ -53,7 +68,13 @@ const functions = (config) => {
       isAsync: true,
       description: "Transcribe audio with 11labs",
       arguments: [
-        { name: "options", type: "JSON", tstype: "{file: string, api_key?: string, diarize?: boolean, model?: string, languageCode?: string}", required: true },
+        {
+          name: "options",
+          type: "JSON",
+          tstype:
+            "{file: string, api_key?: string, diarize?: boolean, model?: string, languageCode?: string}",
+          required: true,
+        },
       ],
     },
   };
