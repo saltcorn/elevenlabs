@@ -37,12 +37,12 @@ const configuration_workflow = () =>
 const functions = (config) => {
   return {
     elevenlabs_get_client: {
-      run: async (opts) => {
-        return await new ElevenLabsClient({
+      run: (opts) => {
+        return new ElevenLabsClient({
           apiKey: opts?.api_key || config.api_key,
         });
       },
-      isAsync: true,
+      isAsync: false,
       description: "Get the elevenlabs client",
       arguments: [
         {
