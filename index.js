@@ -51,9 +51,9 @@ const functions = (config) => {
         });
       },
       isAsync: true,
-      description: "Get vector embedding",
+      description: "Transcribe audio with 11labs",
       arguments: [
-        { name: "options", type: "JSON", tstype: "any", required: true },
+        { name: "options", type: "JSON", tstype: "{file: string, api_key?: string, diarize?: boolean, model?: string, languageCode?: string}", required: true },
       ],
     },
   };
