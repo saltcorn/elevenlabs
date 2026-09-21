@@ -83,6 +83,29 @@ const functions = (config) => {
       run: async (opts) => {
         const filePath = File.get_new_path(opts.fileName, true);
 
+        // Accept either camelCase (API-native) or snake_case (as used by
+        // existing scripts) keys and map them onto the request's
+        // voiceSettings, which the ElevenLabs SDK requires in camelCase.
+        const rawSettings = opts.voiceSettings || opts.voice_settings;
+        let voiceSettings;
+        if (rawSettings) {
+          voiceSettings = {};
+          const stability = rawSettings.stability;
+          const similarityBoost =
+            rawSettings.similarityBoost ?? rawSettings.similarity_boost;
+          const style = rawSettings.style;
+          const useSpeakerBoost =
+            rawSettings.useSpeakerBoost ?? rawSettings.use_speaker_boost;
+          const speed = rawSettings.speed;
+          if (stability !== undefined) voiceSettings.stability = stability;
+          if (similarityBoost !== undefined)
+            voiceSettings.similarityBoost = similarityBoost;
+          if (style !== undefined) voiceSettings.style = style;
+          if (useSpeakerBoost !== undefined)
+            voiceSettings.useSpeakerBoost = useSpeakerBoost;
+          if (speed !== undefined) voiceSettings.speed = speed;
+        }
+
         const audio = await new ElevenLabsClient({
           apiKey: opts?.api_key || config.api_key,
         }).textToSpeech.convert(opts.voiceId, {
@@ -90,6 +113,7 @@ const functions = (config) => {
           modelId: opts.model || "eleven_multilingual_v2", // good all-round quality model
           languageCode: opts.languageCode || undefined, // Language of the audio file. If set to null, the model will detect the language automatically.
           outputFormat: "mp3_44100_128", // 44.1 kHz, 128 kbps MP3
+          ...(voiceSettings ? { voiceSettings } : {}),
         });
 
         // The stream may be a web ReadableStream depending on the runtime;
@@ -110,7 +134,7 @@ const functions = (config) => {
           name: "options",
           type: "JSON",
           tstype:
-            "{fileName: string, voiceId: string, text: string, api_key?: string, model?: string, languageCode?: string}",
+            "{fileName: string, voiceId: string, text: string, api_key?: string, model?: string, languageCode?: string, voice_settings?: {stability?: number, similarity_boost?: number, style?: number, use_speaker_boost?: boolean, speed?: number}}",
           required: true,
         },
       ],
